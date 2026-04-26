@@ -102,7 +102,11 @@ export class MistralLLM implements LLM {
       };
     }
 
-    const message = response.choices[0].message;
+    const message = response.choices[0]?.message;
+
+    if (!message) {
+      throw new Error("No message in response from Mistral API");
+    }
 
     return {
       content: this.contentToString(message.content),

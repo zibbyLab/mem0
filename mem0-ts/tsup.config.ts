@@ -32,7 +32,7 @@ export default defineConfig([
   {
     entry: ["src/client/index.ts"],
     format: ["cjs", "esm"],
-    dts: true,
+    dts: false,
     sourcemap: true,
     external,
     define,
@@ -41,7 +41,7 @@ export default defineConfig([
     entry: ["src/oss/src/index.ts"],
     outDir: "dist/oss",
     format: ["cjs", "esm"],
-    dts: true,
+    dts: false,
     sourcemap: true,
     external,
     define,
