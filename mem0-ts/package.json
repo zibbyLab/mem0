@@ -1,6 +1,6 @@
 {
   "name": "mem0ai",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "The Memory Layer For Your AI Apps",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -120,11 +120,34 @@
     "better-sqlite3": "^12.6.2",
     "cloudflare": "^4.2.0",
     "groq-sdk": "0.3.0",
+    "neo4j-driver": "^5.28.1",
     "ollama": "^0.5.14",
     "pg": "8.11.3",
     "redis": "^4.6.13",
     "compromise": "^14.0.0",
     "natural": "^8.0.1"
+  },
+  "peerDependenciesMeta": {
+    "@anthropic-ai/sdk": { "optional": true },
+    "@azure/identity": { "optional": true },
+    "@azure/search-documents": { "optional": true },
+    "@cloudflare/workers-types": { "optional": true },
+    "@google/genai": { "optional": true },
+    "@langchain/core": { "optional": true },
+    "@mistralai/mistralai": { "optional": true },
+    "@qdrant/js-client-rest": { "optional": true },
+    "@supabase/supabase-js": { "optional": true },
+    "@types/jest": { "optional": true },
+    "@types/pg": { "optional": true },
+    "better-sqlite3": { "optional": true },
+    "cloudflare": { "optional": true },
+    "groq-sdk": { "optional": true },
+    "neo4j-driver": { "optional": true },
+    "ollama": { "optional": true },
+    "pg": { "optional": true },
+    "redis": { "optional": true },
+    "compromise": { "optional": true },
+    "natural": { "optional": true }
   },
   "engines": {
     "node": ">=18"
