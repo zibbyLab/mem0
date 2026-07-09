@@ -1,13 +1,3 @@
-import { OpenAIEmbedder } from "../embeddings/openai";
-import { OllamaEmbedder } from "../embeddings/ollama";
-import { LMStudioEmbedder } from "../embeddings/lmstudio";
-import { TogetherEmbedder } from "../embeddings/together";
-import { OpenAILLM } from "../llms/openai";
-import { OpenAIStructuredLLM } from "../llms/openai_structured";
-import { AnthropicLLM } from "../llms/anthropic";
-import { GroqLLM } from "../llms/groq";
-import { MistralLLM } from "../llms/mistral";
-import { MemoryVectorStore } from "../vector_stores/memory";
 import {
   EmbeddingConfig,
   HistoryStoreConfig,
@@ -17,71 +7,66 @@ import {
 import { Embedder } from "../embeddings/base";
 import { LLM } from "../llms/base";
 import { VectorStore } from "../vector_stores/base";
-import { Qdrant } from "../vector_stores/qdrant";
-import { ChromaDB } from "../vector_stores/chroma";
-import { VectorizeDB } from "../vector_stores/vectorize";
-import { RedisDB } from "../vector_stores/redis";
-import { ValkeyDB } from "../vector_stores/valkey";
-import { OllamaLLM } from "../llms/ollama";
-import { LMStudioLLM } from "../llms/lmstudio";
-import { DeepSeekLLM } from "../llms/deepseek";
-import { XAILLM } from "../llms/xai";
-import { SarvamLLM } from "../llms/sarvam";
-import { LiteLLM } from "../llms/litellm";
-import { MiniMaxLLM } from "../llms/minimax";
-import { TogetherLLM } from "../llms/together";
-import { VllmLLM } from "../llms/vllm";
-import { SupabaseDB } from "../vector_stores/supabase";
-import { SQLiteManager } from "../storage/SQLiteManager";
-import { MemoryHistoryManager } from "../storage/MemoryHistoryManager";
-import { SupabaseHistoryManager } from "../storage/SupabaseHistoryManager";
 import { HistoryManager } from "../storage/base";
-import { GoogleEmbedder } from "../embeddings/google";
-import { GoogleLLM } from "../llms/google";
-import { AzureOpenAILLM } from "../llms/azure";
-import { AzureOpenAIEmbedder } from "../embeddings/azure";
-import { FastEmbedEmbedder } from "../embeddings/fastembed";
-import { LangchainLLM } from "../llms/langchain";
-import { LangchainEmbedder } from "../embeddings/langchain";
-import { HuggingFaceEmbedder } from "../embeddings/huggingface";
-import { LangchainVectorStore } from "../vector_stores/langchain";
-import { AzureAISearch } from "../vector_stores/azure_ai_search";
-import { PGVector } from "../vector_stores/pgvector";
-import { ElasticsearchDB } from "../vector_stores/elasticsearch";
-import { OpenSearchDB } from "../vector_stores/opensearch";
-import { UpstashVector } from "../vector_stores/upstash_vector";
-import { AzureMySQLDB } from "../vector_stores/azure_mysql";
-import { VertexAIVectorSearch } from "../vector_stores/vertex_ai_vector_search";
-import { CassandraDB } from "../vector_stores/cassandra";
-import { PineconeDB } from "../vector_stores/pinecone";
-import { S3Vectors } from "../vector_stores/s3_vectors";
-import { TurbopufferDB } from "../vector_stores/turbopuffer";
-import { Milvus } from "../vector_stores/milvus";
-import { MongoDB } from "../vector_stores/mongodb";
-import { WeaviateDB } from "../vector_stores/weaviate";
+
+// Provider modules are loaded lazily via dynamic import() so that each
+// provider's heavy external SDK (ollama, groq-sdk, pg, redis, cloudflare,
+// chromadb, iovalkey, weaviate-client, @qdrant/js-client-rest, @pinecone-*,
+// @azure/*, @google/genai, @langchain/core, @mistralai/mistralai,
+// @supabase/supabase-js, @opensearch-project/opensearch, @upstash/vector,
+// cassandra-driver, mongodb, mysql2, @zilliz/milvus2-sdk-node, ...) is only
+// required when that specific provider is actually configured. Previously
+// these were static top-level imports, which forced ALL optional provider
+// SDKs to resolve at module-load time — so `import('mem0ai/oss')` threw
+// ERR_MODULE_NOT_FOUND on the first missing optional dep even when the caller
+// only used the OpenAI LLM/embedder + the in-memory vector store.
+// These factory methods are async; all call sites run in async context
+// (Memory._autoInitialize / reset / getEntityStore).
 
 export class EmbedderFactory {
-  static create(provider: string, config: EmbeddingConfig): Embedder {
+  static async create(
+    provider: string,
+    config: EmbeddingConfig,
+  ): Promise<Embedder> {
     switch (provider.toLowerCase()) {
-      case "openai":
+      case "openai": {
+        const { OpenAIEmbedder } = await import("../embeddings/openai");
         return new OpenAIEmbedder(config);
-      case "ollama":
+      }
+      case "ollama": {
+        const { OllamaEmbedder } = await import("../embeddings/ollama");
         return new OllamaEmbedder(config);
-      case "lmstudio":
+      }
+      case "lmstudio": {
+        const { LMStudioEmbedder } = await import("../embeddings/lmstudio");
         return new LMStudioEmbedder(config);
-      case "together":
+      }
+      case "together": {
+        const { TogetherEmbedder } = await import("../embeddings/together");
         return new TogetherEmbedder(config);
+      }
       case "google":
-      case "gemini":
+      case "gemini": {
+        const { GoogleEmbedder } = await import("../embeddings/google");
         return new GoogleEmbedder(config);
-      case "azure_openai":
+      }
+      case "azure_openai": {
+        const { AzureOpenAIEmbedder } = await import("../embeddings/azure");
         return new AzureOpenAIEmbedder(config);
-      case "fastembed":
+      }
+      case "fastembed": {
+        const { FastEmbedEmbedder } = await import("../embeddings/fastembed");
         return new FastEmbedEmbedder(config);
-      case "langchain":
+      }
+      case "langchain": {
+        const { LangchainEmbedder } = await import("../embeddings/langchain");
         return new LangchainEmbedder(config);
-      case "huggingface":
+      }
+      case "huggingface": {
+        const { HuggingFaceEmbedder } =
+          await import("../embeddings/huggingface");
         return new HuggingFaceEmbedder(config);
+      }
       default:
         throw new Error(`Unsupported embedder provider: ${provider}`);
     }
@@ -89,43 +74,78 @@ export class EmbedderFactory {
 }
 
 export class LLMFactory {
-  static create(provider: string, config: LLMConfig): LLM {
+  static async create(provider: string, config: LLMConfig): Promise<LLM> {
     switch (provider.toLowerCase()) {
-      case "openai":
+      case "openai": {
+        const { OpenAILLM } = await import("../llms/openai");
         return new OpenAILLM(config);
-      case "openai_structured":
+      }
+      case "openai_structured": {
+        const { OpenAIStructuredLLM } =
+          await import("../llms/openai_structured");
         return new OpenAIStructuredLLM(config);
-      case "anthropic":
+      }
+      case "anthropic": {
+        const { AnthropicLLM } = await import("../llms/anthropic");
         return new AnthropicLLM(config);
-      case "groq":
+      }
+      case "groq": {
+        const { GroqLLM } = await import("../llms/groq");
         return new GroqLLM(config);
-      case "ollama":
+      }
+      case "ollama": {
+        const { OllamaLLM } = await import("../llms/ollama");
         return new OllamaLLM(config);
-      case "lmstudio":
+      }
+      case "lmstudio": {
+        const { LMStudioLLM } = await import("../llms/lmstudio");
         return new LMStudioLLM(config);
+      }
       case "google":
-      case "gemini":
+      case "gemini": {
+        const { GoogleLLM } = await import("../llms/google");
         return new GoogleLLM(config);
-      case "azure_openai":
+      }
+      case "azure_openai": {
+        const { AzureOpenAILLM } = await import("../llms/azure");
         return new AzureOpenAILLM(config);
-      case "mistral":
+      }
+      case "mistral": {
+        const { MistralLLM } = await import("../llms/mistral");
         return new MistralLLM(config);
-      case "langchain":
+      }
+      case "langchain": {
+        const { LangchainLLM } = await import("../llms/langchain");
         return new LangchainLLM(config);
-      case "deepseek":
+      }
+      case "deepseek": {
+        const { DeepSeekLLM } = await import("../llms/deepseek");
         return new DeepSeekLLM(config);
-      case "xai":
+      }
+      case "xai": {
+        const { XAILLM } = await import("../llms/xai");
         return new XAILLM(config);
-      case "sarvam":
+      }
+      case "sarvam": {
+        const { SarvamLLM } = await import("../llms/sarvam");
         return new SarvamLLM(config);
-      case "litellm":
+      }
+      case "litellm": {
+        const { LiteLLM } = await import("../llms/litellm");
         return new LiteLLM(config);
-      case "minimax":
+      }
+      case "minimax": {
+        const { MiniMaxLLM } = await import("../llms/minimax");
         return new MiniMaxLLM(config);
-      case "together":
+      }
+      case "together": {
+        const { TogetherLLM } = await import("../llms/together");
         return new TogetherLLM(config);
-      case "vllm":
+      }
+      case "vllm": {
+        const { VllmLLM } = await import("../llms/vllm");
         return new VllmLLM(config);
+      }
       default:
         throw new Error(`Unsupported LLM provider: ${provider}`);
     }
@@ -133,53 +153,105 @@ export class LLMFactory {
 }
 
 export class VectorStoreFactory {
-  static create(provider: string, config: VectorStoreConfig): VectorStore {
+  static async create(
+    provider: string,
+    config: VectorStoreConfig,
+  ): Promise<VectorStore> {
     switch (provider.toLowerCase()) {
-      case "memory":
+      case "memory": {
+        const { MemoryVectorStore } = await import("../vector_stores/memory");
         return new MemoryVectorStore(config);
-      case "qdrant":
+      }
+      case "qdrant": {
+        const { Qdrant } = await import("../vector_stores/qdrant");
         return new Qdrant(config as any);
-      case "chroma":
+      }
+      case "chroma": {
+        const { ChromaDB } = await import("../vector_stores/chroma");
         return new ChromaDB(config as any);
-      case "redis":
+      }
+      case "redis": {
+        const { RedisDB } = await import("../vector_stores/redis");
         return new RedisDB(config as any);
-      case "valkey":
+      }
+      case "valkey": {
+        const { ValkeyDB } = await import("../vector_stores/valkey");
         return new ValkeyDB(config as any);
-      case "supabase":
+      }
+      case "supabase": {
+        const { SupabaseDB } = await import("../vector_stores/supabase");
         return new SupabaseDB(config as any);
-      case "langchain":
+      }
+      case "langchain": {
+        const { LangchainVectorStore } =
+          await import("../vector_stores/langchain");
         return new LangchainVectorStore(config as any);
-      case "vectorize":
+      }
+      case "vectorize": {
+        const { VectorizeDB } = await import("../vector_stores/vectorize");
         return new VectorizeDB(config as any);
-      case "azure-ai-search":
+      }
+      case "azure-ai-search": {
+        const { AzureAISearch } =
+          await import("../vector_stores/azure_ai_search");
         return new AzureAISearch(config as any);
-      case "vertex_ai_vector_search":
+      }
+      case "vertex_ai_vector_search": {
+        const { VertexAIVectorSearch } =
+          await import("../vector_stores/vertex_ai_vector_search");
         return new VertexAIVectorSearch(config as any);
-      case "pgvector":
+      }
+      case "pgvector": {
+        const { PGVector } = await import("../vector_stores/pgvector");
         return new PGVector(config as any);
-      case "elasticsearch":
+      }
+      case "elasticsearch": {
+        const { ElasticsearchDB } =
+          await import("../vector_stores/elasticsearch");
         return new ElasticsearchDB(config as any);
-      case "opensearch":
+      }
+      case "opensearch": {
+        const { OpenSearchDB } = await import("../vector_stores/opensearch");
         return new OpenSearchDB(config as any);
-      case "upstash_vector":
+      }
+      case "upstash_vector": {
+        const { UpstashVector } =
+          await import("../vector_stores/upstash_vector");
         return new UpstashVector(config as any);
-      case "azure_mysql":
+      }
+      case "azure_mysql": {
+        const { AzureMySQLDB } = await import("../vector_stores/azure_mysql");
         return new AzureMySQLDB(config as any);
-      case "cassandra":
+      }
+      case "cassandra": {
+        const { CassandraDB } = await import("../vector_stores/cassandra");
         return new CassandraDB(config as any);
-      case "pinecone":
+      }
+      case "pinecone": {
+        const { PineconeDB } = await import("../vector_stores/pinecone");
         return new PineconeDB(config as any);
+      }
       case "s3-vectors":
-      case "s3_vectors":
+      case "s3_vectors": {
+        const { S3Vectors } = await import("../vector_stores/s3_vectors");
         return new S3Vectors(config as any);
-      case "turbopuffer":
+      }
+      case "turbopuffer": {
+        const { TurbopufferDB } = await import("../vector_stores/turbopuffer");
         return new TurbopufferDB(config as any);
-      case "milvus":
+      }
+      case "milvus": {
+        const { Milvus } = await import("../vector_stores/milvus");
         return new Milvus(config as any);
-      case "mongodb":
+      }
+      case "mongodb": {
+        const { MongoDB } = await import("../vector_stores/mongodb");
         return new MongoDB(config as any);
-      case "weaviate":
+      }
+      case "weaviate": {
+        const { WeaviateDB } = await import("../vector_stores/weaviate");
         return new WeaviateDB(config as any);
+      }
       default:
         throw new Error(`Unsupported vector store provider: ${provider}`);
     }
@@ -187,18 +259,29 @@ export class VectorStoreFactory {
 }
 
 export class HistoryManagerFactory {
-  static create(provider: string, config: HistoryStoreConfig): HistoryManager {
+  static async create(
+    provider: string,
+    config: HistoryStoreConfig,
+  ): Promise<HistoryManager> {
     switch (provider.toLowerCase()) {
-      case "sqlite":
+      case "sqlite": {
+        const { SQLiteManager } = await import("../storage/SQLiteManager");
         return new SQLiteManager(config.config.historyDbPath || ":memory:");
-      case "supabase":
+      }
+      case "supabase": {
+        const { SupabaseHistoryManager } =
+          await import("../storage/SupabaseHistoryManager");
         return new SupabaseHistoryManager({
           supabaseUrl: config.config.supabaseUrl || "",
           supabaseKey: config.config.supabaseKey || "",
           tableName: config.config.tableName || "memory_history",
         });
-      case "memory":
+      }
+      case "memory": {
+        const { MemoryHistoryManager } =
+          await import("../storage/MemoryHistoryManager");
         return new MemoryHistoryManager();
+      }
       default:
         throw new Error(`Unsupported history store provider: ${provider}`);
     }

@@ -158,10 +158,10 @@ function validateSearchParams(threshold?: number, topK?: number): void {
 export class Memory {
   private config: MemoryConfig;
   private customInstructions: string | undefined;
-  private embedder: Embedder;
+  private embedder!: Embedder;
   private vectorStore!: VectorStore;
-  private llm: LLM;
-  private db: HistoryManager;
+  private llm!: LLM;
+  private db!: HistoryManager;
   private collectionName: string | undefined;
   private apiVersion: string;
   telemetryId: string;
@@ -174,25 +174,10 @@ export class Memory {
     this.config = ConfigManager.mergeConfig(config);
 
     this.customInstructions = this.config.customInstructions;
-    this.embedder = EmbedderFactory.create(
-      this.config.embedder.provider,
-      this.config.embedder.config,
-    );
-    // Vector store creation is deferred to _autoInitialize() so that
-    // the embedding dimension can be auto-detected first when not
-    // explicitly configured.
-    this.llm = LLMFactory.create(
-      this.config.llm.provider,
-      this.config.llm.config,
-    );
-    if (this.config.disableHistory) {
-      this.db = new DummyHistoryManager();
-    } else {
-      this.db = HistoryManagerFactory.create(
-        this.config.historyStore!.provider,
-        this.config.historyStore!,
-      );
-    }
+    // Embedder, LLM, history store, and vector store are all created lazily
+    // in _autoInitialize() (the factories are async so provider SDKs load on
+    // demand — see utils/factory.ts). Definite-assignment (!) is safe because
+    // every public method awaits _ensureInitialized() before touching these.
 
     this.collectionName = this.config.vectorStore.config.collectionName;
     this.apiVersion = this.config.version || "v1.0";
@@ -212,6 +197,27 @@ export class Memory {
    * detect it. Then creates and initializes the vector store.
    */
   private async _autoInitialize(): Promise<void> {
+    // Create embedder, LLM, and history store first (async factories →
+    // provider SDKs load lazily). Idempotent: re-running init (retry / reset)
+    // simply rebuilds them. Must run before the dimension probe below, which
+    // uses this.embedder.
+    this.embedder = await EmbedderFactory.create(
+      this.config.embedder.provider,
+      this.config.embedder.config,
+    );
+    this.llm = await LLMFactory.create(
+      this.config.llm.provider,
+      this.config.llm.config,
+    );
+    if (this.config.disableHistory) {
+      this.db = new DummyHistoryManager();
+    } else {
+      this.db = await HistoryManagerFactory.create(
+        this.config.historyStore!.provider,
+        this.config.historyStore!,
+      );
+    }
+
     if (!this.config.vectorStore.config.dimension) {
       try {
         const probe = await this.embedder.embed("dimension probe");
@@ -224,7 +230,7 @@ export class Memory {
       }
     }
 
-    this.vectorStore = VectorStoreFactory.create(
+    this.vectorStore = await VectorStoreFactory.create(
       this.config.vectorStore.provider,
       this.config.vectorStore.config,
     );
@@ -273,7 +279,7 @@ export class Memory {
         const basePath = entityConfig.dbPath || getDefaultVectorStoreDbPath();
         entityConfig.dbPath = basePath.replace(/\.db$/, "_entities.db");
       }
-      this._entityStore = VectorStoreFactory.create(
+      this._entityStore = await VectorStoreFactory.create(
         this.config.vectorStore.provider,
         entityConfig,
       );
@@ -1672,19 +1678,10 @@ export class Memory {
       this._entityStore = undefined;
     }
 
-    // Re-initialize factories/clients based on the original config.
-    // Dimension is already set in this.config from the initial probe,
-    // so _autoInitialize will skip the probe and just re-create the store.
-    this.embedder = EmbedderFactory.create(
-      this.config.embedder.provider,
-      this.config.embedder.config,
-    );
-    this.llm = LLMFactory.create(
-      this.config.llm.provider,
-      this.config.llm.config,
-    );
-
-    // Re-create vector store via _autoInitialize (which handles dimension + creation)
+    // Re-initialize embedder/LLM/history store + vector store via
+    // _autoInitialize (which now recreates all of them via the async
+    // factories). Dimension is already set in this.config from the initial
+    // probe, so _autoInitialize will skip the probe and just re-create.
     this._initError = undefined;
     this._initPromise = this._autoInitialize().catch((error) => {
       this._initError =

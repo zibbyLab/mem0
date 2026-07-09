@@ -143,6 +143,102 @@
     "@zilliz/milvus2-sdk-node": "^2.4.0 || ^3.0.0"
   },
   "peerDependenciesMeta": {
+    "@anthropic-ai/sdk": {
+      "optional": true
+    },
+    "@aws-sdk/client-s3vectors": {
+      "optional": true
+    },
+    "@azure/identity": {
+      "optional": true
+    },
+    "@azure/search-documents": {
+      "optional": true
+    },
+    "@cloudflare/workers-types": {
+      "optional": true
+    },
+    "@google-cloud/aiplatform": {
+      "optional": true
+    },
+    "@google/genai": {
+      "optional": true
+    },
+    "@langchain/core": {
+      "optional": true
+    },
+    "@mistralai/mistralai": {
+      "optional": true
+    },
+    "@opensearch-project/opensearch": {
+      "optional": true
+    },
+    "@pinecone-database/pinecone": {
+      "optional": true
+    },
+    "@qdrant/js-client-rest": {
+      "optional": true
+    },
+    "@supabase/supabase-js": {
+      "optional": true
+    },
+    "@turbopuffer/turbopuffer": {
+      "optional": true
+    },
+    "@types/jest": {
+      "optional": true
+    },
+    "@types/pg": {
+      "optional": true
+    },
+    "@upstash/vector": {
+      "optional": true
+    },
+    "better-sqlite3": {
+      "optional": true
+    },
+    "cassandra-driver": {
+      "optional": true
+    },
+    "chromadb": {
+      "optional": true
+    },
+    "cloudflare": {
+      "optional": true
+    },
+    "fastembed": {
+      "optional": true
+    },
+    "groq-sdk": {
+      "optional": true
+    },
+    "mongodb": {
+      "optional": true
+    },
+    "weaviate-client": {
+      "optional": true
+    },
+    "ollama": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "redis": {
+      "optional": true
+    },
+    "@elastic/elasticsearch": {
+      "optional": true
+    },
+    "iovalkey": {
+      "optional": true
+    },
+    "compromise": {
+      "optional": true
+    },
+    "natural": {
+      "optional": true
+    },
     "mysql2": {
       "optional": true
     },
