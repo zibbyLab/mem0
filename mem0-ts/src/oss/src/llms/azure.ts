@@ -48,10 +48,13 @@ export class AzureOpenAILLM implements LLM {
       return {
         content: response.content || "",
         role: response.role,
-        toolCalls: response.tool_calls.map((call) => ({
-          name: call.function.name,
-          arguments: call.function.arguments,
-        })),
+        toolCalls: response.tool_calls.flatMap((call) =>
+          // openai v5: tool_calls is a union (function | custom); only the
+          // function variant has `.function`. Narrow with `in` + drop customs.
+          "function" in call
+            ? [{ name: call.function.name, arguments: call.function.arguments }]
+            : [],
+        ),
       };
     }
 
